@@ -1,0 +1,46 @@
+:local ApiTele "7853546086:AAFj4PQIJ97HlAC_DSsnFzcyDL3uInM4JEo";
+:local ChatId "5680485003";
+:local Nama $user;
+:local Ip $address;
+:local Waktu [/system clock get time];
+:local Tanggal [/system clock get date];
+
+# Debugging: Log event login
+:log info "Login detected: User - $Nama, IP - $Ip"
+
+# Ambil informasi device dari DHCP lease
+:local DeviceName "";
+:foreach i in=[/ip dhcp-server lease find where address=$Ip] do={
+    :set DeviceName [/ip dhcp-server lease get $i host-name];
+}
+
+# Jika device tidak ditemukan di DHCP lease, gunakan default
+:if ($DeviceName = "") do={
+    :set DeviceName "Unknown Device";
+}
+
+# Ambil profile user dari Hotspot Users
+:local Profile "Unknown Profile";
+:local UserProfile "";
+:foreach u in=[/ip hotspot user find where name=$Nama] do={
+    :set UserProfile [/ip hotspot user get $u profile];
+}
+
+# Jika profile ditemukan, gunakan nilai yang didapat
+:if ($UserProfile != "") do={
+    :set Profile $UserProfile;
+}
+
+# Susun pesan login yang menarik
+:local Pesan "🔓 *New Login Detected* ✅%0A"
+:local Pesan ($Pesan . "👤 *User*: $Nama%0A")
+:local Pesan ($Pesan . "📜 *Profile*: $Profile%0A")
+:local Pesan ($Pesan . "🌐 *IP Address*: $Ip%0A")
+:local Pesan ($Pesan . "💻 *Device*: $DeviceName%0A")
+:local Pesan ($Pesan . "🕒 *Login Time*: $Waktu - $Tanggal");
+
+# Debugging: Log pesan sebelum dikirim
+:log info "Sending Telegram Login Message: $Pesan"
+
+# Kirim pesan ke Telegram
+/tool fetch url=("https://api.telegram.org/bot" . $ApiTele . "/sendMessage?chat_id=" . $ChatId . "&text=" . $Pesan . "&parse_mode=Markdown") mode=http keep-result=no
