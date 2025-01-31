@@ -2,8 +2,6 @@
 :local ChatId "5680485003";
 :local Nama $user;
 :local Ip $address;
-:local Waktu [/system clock get time];
-:local Tanggal [/system clock get date];
 
 # Debugging: Log event logout
 :log info "Logout detected: User - $Nama, IP - $Ip"
@@ -20,45 +18,25 @@
 }
 
 # Ambil profile user dari Hotspot Users
-:local Profile "Unknown Profile";
+:local Profile "Unknown Profile";  # Default jika tidak ditemukan
 :local UserProfile "";
 :foreach u in=[/ip hotspot user find where name=$Nama] do={
     :set UserProfile [/ip hotspot user get $u profile];
 }
+
+# Debugging: Log hasil pencarian profile
+:log info "Profile found for $Nama: $UserProfile"
 
 # Jika profile ditemukan, gunakan nilai yang didapat
 :if ($UserProfile != "") do={
     :set Profile $UserProfile;
 }
 
-# Ambil durasi koneksi (uptime) user dari Hotspot Active
-:local Uptime "Unknown";
-:foreach a in=[/ip hotspot active find where user=$Nama] do={
-    :set Uptime [/ip hotspot active get $a uptime];
-}
-
-# Cek apakah logout karena timeout
-:local LogoutReason "Manual Logout";
-:foreach s in=[/ip hotspot user find where name=$Nama] do={
-    :local SessionTime [/ip hotspot user get $s session-time-left];
-    :if ($SessionTime = "0s") do={
-        :set LogoutReason "Session Timeout ⏳";
-    }
-}
-
-# Susun pesan logout yang menarik
-:local Pesan "🚪 *Logout Detected* ❌%0A"
-:local Pesan ($Pesan . "👤 *User*: $Nama%0A")
-:local Pesan ($Pesan . "📜 *Profile*: $Profile%0A")
-:local Pesan ($Pesan . "🌐 *IP Address*: $Ip%0A")
-:local Pesan ($Pesan . "💻 *Device*: $DeviceName%0A")
-:local Pesan ($Pesan . "⏳ *Uptime*: $Uptime%0A")
-:local Pesan ($Pesan . "🕒 *Logout Time*: $Waktu - $Tanggal%0A")
-:local Pesan ($Pesan . "🔍 *Reason*: $LogoutReason");
+# Susun pesan logout
+:local Pesan "User Logout❌%0AUser: $Nama%0AProfile: $Profile%0AIP Address: $Ip%0ADevice: $DeviceName";
 
 # Debugging: Log pesan sebelum dikirim
 :log info "Sending Telegram Logout Message: $Pesan"
 
 # Kirim pesan ke Telegram
-/tool fetch url=("https://api.telegram.org/bot" . $ApiTele . "/sendMessage?chat_id=" . $ChatId . "&text=" . $Pesan . "&parse_mode=Markdown") mode=http keep-result=no
-
+/tool fetch url=("https://api.telegram.org/bot" . $ApiTele . "/sendMessage?chat_id=" . $ChatId . "&text=" . $Pesan . "&parse_mode=HTML") mode=http keep-result=no
