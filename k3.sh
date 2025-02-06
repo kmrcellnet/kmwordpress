@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Pastikan skrip dijalankan sebagai root
-if [ "$EUID" -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
   echo "Silakan jalankan sebagai root (sudo bash install_webserver_wordpress.sh)"
   exit 1
 fi
