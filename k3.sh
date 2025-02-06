@@ -70,7 +70,7 @@ rm latest.tar.gz
 # Mengatur izin direktori WordPress ke 777
 echo "Setting permissions for WordPress..."
 chown -R www-data:www-data wordpress
-chmod -R 777 wordpress
+chmod -R 755 wordpress  # Changing permissions from 777 to 755 for security
 
 # Konfigurasi Apache untuk WordPress
 echo "Configuring Apache for WordPress..."
