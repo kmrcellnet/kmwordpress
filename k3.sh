@@ -8,33 +8,30 @@ fi
 
 # Update dan upgrade sistem
 echo "Updating system..."
-apt update && apt upgrade -y
+apt update
 
 # Install OpenSSH Server
 echo "Installing OpenSSH Server..."
-apt install -y openssh-server
-systemctl enable --now ssh
+apt install openssh-sftp-server
 
 # Install Apache2
 echo "Installing Apache2..."
-apt install -y apache2
-systemctl enable --now apache2
+apt install apache2
 
 # Install MariaDB Server
 echo "Installing MariaDB..."
-apt install -y mariadb-server
-systemctl enable --now mariadb
+apt install mariadb-server
 
 # Mengamankan MariaDB
 echo "Securing MariaDB..."
-mysql_secure_installation <<EOF
-y
-n
-y
-y
-y
-y
-EOF
+mysql_secure_installation 
+
+
+
+
+
+
+
 
 # Membuat database WordPress
 echo "Creating WordPress database..."
@@ -44,7 +41,7 @@ DB_PASS="WpPass123!"
 
 mysql -uroot -e "CREATE DATABASE $DB_NAME;"
 mysql -uroot -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
-mysql -uroot -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
+mysql -uroot -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost' WITH GRANT OPTION;"
 mysql -uroot -e "FLUSH PRIVILEGES;"
 
 # Install PHP dan ekstensi yang diperlukan
@@ -53,7 +50,7 @@ apt install -y php libapache2-mod-php php-mysql php-mbstring php-zip php-gd php-
 
 # Install PHPMyAdmin
 echo "Installing PHPMyAdmin..."
-apt install -y phpmyadmin
+apt install phpmyadmin -y
 
 # Konfigurasi Apache untuk PHPMyAdmin
 echo "Configuring Apache for PHPMyAdmin..."
@@ -69,8 +66,7 @@ rm latest.tar.gz
 
 # Mengatur izin direktori WordPress ke 777
 echo "Setting permissions for WordPress..."
-chown -R www-data:www-data wordpress
-chmod -R 755 wordpress  # Changing permissions from 777 to 755 for security
+chmod -R 777 wordpress  # Changing permissions from 777 to 755 for security
 
 # Konfigurasi Apache untuk WordPress
 echo "Configuring Apache for WordPress..."
