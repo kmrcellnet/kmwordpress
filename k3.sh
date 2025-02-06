@@ -28,7 +28,6 @@ systemctl enable --now mariadb
 # Mengamankan MariaDB
 echo "Securing MariaDB..."
 mysql_secure_installation <<EOF
-
 y
 n
 y
