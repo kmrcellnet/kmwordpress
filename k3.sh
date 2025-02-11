@@ -27,7 +27,7 @@ unzip wordpress.zip
 
 # Set permissions for the WordPress directory
 echo -e "${YELLOW}Setting permissions for the WordPress directory...${NC}"
-chmod -R 755 wordpress
+chmod -R 777 wordpress
 
 # Prompt user for MySQL database and user details
 echo -e "${YELLOW}Enter the database name for WordPress:${NC}"
@@ -86,6 +86,16 @@ GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 MYSQL_SCRIPT
 
+# Generate random authentication keys and salts
+AUTH_KEY=$(openssl rand -base64 32)
+SECURE_AUTH_KEY=$(openssl rand -base64 32)
+LOGGED_IN_KEY=$(openssl rand -base64 32)
+NONCE_KEY=$(openssl rand -base64 32)
+AUTH_SALT=$(openssl rand -base64 32)
+SECURE_AUTH_SALT=$(openssl rand -base64 32)
+LOGGED_IN_SALT=$(openssl rand -base64 32)
+NONCE_SALT=$(openssl rand -base64 32)
+
 # Create wp-config.php file with dynamic database details
 echo -e "${YELLOW}Creating wp-config.php file...${NC}"
 
@@ -109,14 +119,14 @@ define( 'DB_PASSWORD', '$DB_PASS' );
 define( 'DB_HOST', 'localhost' );
 
 // ** Authentication Unique Keys and Salts.** You can generate these using the WordPress secret key service.
-define( 'AUTH_KEY',         '$(openssl rand -base64 32)' );
-define( 'SECURE_AUTH_KEY',  '$(openssl rand -base64 32)' );
-define( 'LOGGED_IN_KEY',    '$(openssl rand -base64 32)' );
-define( 'NONCE_KEY',        '$(openssl rand -base64 32)' );
-define( 'AUTH_SALT',        '$(openssl rand -base64 32)' );
-define( 'SECURE_AUTH_SALT', '$(openssl rand -base64 32)' );
-define( 'LOGGED_IN_SALT',   '$(openssl rand -base64 32)' );
-define( 'NONCE_SALT',       '$(openssl rand -base64 32)' );
+define( 'AUTH_KEY',         '$AUTH_KEY' );
+define( 'SECURE_AUTH_KEY',  '$SECURE_AUTH_KEY' );
+define( 'LOGGED_IN_KEY',    '$LOGGED_IN_KEY' );
+define( 'NONCE_KEY',        '$NONCE_KEY' );
+define( 'AUTH_SALT',        '$AUTH_SALT' );
+define( 'SECURE_AUTH_SALT', '$SECURE_AUTH_SALT' );
+define( 'LOGGED_IN_SALT',   '$LOGGED_IN_SALT' );
+define( 'NONCE_SALT',       '$NONCE_SALT' );
 
 // ** Database Table prefix. You can change this if you want to run multiple WordPress installations in a single database.**
 $table_prefix = 'wp_';
@@ -128,7 +138,7 @@ define( 'WP_DEBUG', false );
 
 /** Absolute path to the WordPress directory. */
 if ( !defined('ABSPATH') )
-	define('ABSPATH', __DIR__ . '/');
+	define('ABSPATH', __DIR__ . '/' );
 
 /** Sets up WordPress vars and included files. */
 require_once(ABSPATH . 'wp-settings.php');
@@ -143,11 +153,6 @@ systemctl start mariadb
 echo -e "${YELLOW}Enabling Apache and MariaDB services on boot...${NC}"
 systemctl enable apache2
 systemctl enable mariadb
-
-# Output the status of services
-echo -e "${YELLOW}Checking status of Apache and MariaDB...${NC}"
-systemctl status apache2
-systemctl status mariadb
 
 echo -e "${YELLOW}Installation complete. You can now access:${NC}"
 echo -e "${YELLOW}1. WordPress: http://<your-server-ip>/wordpress${NC}"
