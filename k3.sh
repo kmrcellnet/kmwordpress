@@ -6,13 +6,13 @@ NC='\033[0m' # No Color
 
 # Update and install required packages
 echo -e "${YELLOW}Updating system and installing required packages...${NC}"
-sudo apt update -y
-sudo apt install -y openssh-sftp-server apache2 php mariadb-server phpmyadmin wget unzip expect
+apt update -y
+apt install -y openssh-sftp-server apache2 php mariadb-server phpmyadmin wget unzip expect
 
 # Configure phpMyAdmin with Apache
 echo -e "${YELLOW}Configuring phpMyAdmin for Apache...${NC}"
-sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
-sudo systemctl restart apache2
+ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+systemctl restart apache2
 
 # Download WordPress
 echo -e "${YELLOW}Downloading WordPress...${NC}"
@@ -45,7 +45,7 @@ read -s DB_PASS
 # Secure MySQL installation using expect
 echo -e "${YELLOW}Securing MySQL installation...${NC}"
 
-sudo expect <<EOF
+expect <<EOF
 spawn mysql_secure_installation
 
 # Automate responses to secure installation prompts
@@ -88,18 +88,18 @@ MYSQL_SCRIPT
 
 # Start Apache and MariaDB services
 echo -e "${YELLOW}Starting Apache and MariaDB services...${NC}"
-sudo systemctl start apache2
-sudo systemctl start mariadb
+systemctl start apache2
+systemctl start mariadb
 
 # Enable services to start on boot
 echo -e "${YELLOW}Enabling Apache and MariaDB services on boot...${NC}"
-sudo systemctl enable apache2
-sudo systemctl enable mariadb
+systemctl enable apache2
+systemctl enable mariadb
 
 # Output the status of services
 echo -e "${YELLOW}Checking status of Apache and MariaDB...${NC}"
-sudo systemctl status apache2
-sudo systemctl status mariadb
+systemctl status apache2
+systemctl status mariadb
 
 echo -e "${YELLOW}Installation complete. You can now access:${NC}"
 echo -e "${YELLOW}1. WordPress: http://<your-server-ip>/wordpress${NC}"
