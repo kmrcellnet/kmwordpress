@@ -86,6 +86,54 @@ GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 MYSQL_SCRIPT
 
+# Create wp-config.php file with dynamic database details
+echo -e "${YELLOW}Creating wp-config.php file...${NC}"
+
+cat <<EOL > /var/www/html/wordpress/wp-config.php
+<?php
+/**
+ * The base configuration for WordPress
+ *
+ * The wp-config.php creation script uses this file during the installation.
+ * You don't have to use the web site, you can copy this file to "wp-config.php" and fill in the values.
+ *
+ * @link https://codex.wordpress.org/Editing_wp-config.php
+ *
+ * @package WordPress
+ */
+
+// ** MySQL settings - You can get these from your web host ** //
+define( 'DB_NAME', '$DB_NAME' );
+define( 'DB_USER', '$DB_USER' );
+define( 'DB_PASSWORD', '$DB_PASS' );
+define( 'DB_HOST', 'localhost' );
+
+// ** Authentication Unique Keys and Salts.** You can generate these using the WordPress secret key service.
+define( 'AUTH_KEY',         '$(openssl rand -base64 32)' );
+define( 'SECURE_AUTH_KEY',  '$(openssl rand -base64 32)' );
+define( 'LOGGED_IN_KEY',    '$(openssl rand -base64 32)' );
+define( 'NONCE_KEY',        '$(openssl rand -base64 32)' );
+define( 'AUTH_SALT',        '$(openssl rand -base64 32)' );
+define( 'SECURE_AUTH_SALT', '$(openssl rand -base64 32)' );
+define( 'LOGGED_IN_SALT',   '$(openssl rand -base64 32)' );
+define( 'NONCE_SALT',       '$(openssl rand -base64 32)' );
+
+// ** Database Table prefix. You can change this if you want to run multiple WordPress installations in a single database.**
+$table_prefix = 'wp_';
+
+// ** For developers: WordPress debugging mode.**
+define( 'WP_DEBUG', false );
+
+/* That's all, stop editing! Happy publishing. */
+
+/** Absolute path to the WordPress directory. */
+if ( !defined('ABSPATH') )
+	define('ABSPATH', __DIR__ . '/');
+
+/** Sets up WordPress vars and included files. */
+require_once(ABSPATH . 'wp-settings.php');
+EOL
+
 # Start Apache and MariaDB services
 echo -e "${YELLOW}Starting Apache and MariaDB services...${NC}"
 systemctl start apache2
