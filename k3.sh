@@ -32,14 +32,14 @@ echo -e "${YELLOW}Setting permissions for WordPress directory...${NC}"
 chmod -R 777 wordpress
 
 # Prompt for MySQL root password
-echo -e "${YELLOW}Enter MySQL root password:${NC} \c"
+echo -e "${YELLOW}Enter MySQL root password:${NC}"
 read -s ROOT_PASS
 
 # Prompt for database name, username, and password
-echo -e "${YELLOW}Enter the database name for WordPress:${NC} \c"
+echo -e "${YELLOW}BUAT DATABASE WordPress:${NC} \c"
 read DB_NAME
 
-echo -e "${YELLOW}Enter the MySQL username for WordPress:${NC} \c"
+echo -e "${YELLOW}BUAT USER UNTUK WordPress:${NC} \c"
 read DB_USER
 
 echo -e "${YELLOW}Enter the password for the MySQL WordPress user:${NC} \c"
