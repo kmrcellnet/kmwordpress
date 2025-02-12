@@ -2,6 +2,7 @@
 
 # Define color for yellow
 YELLOW='\033[1;33m'
+GRENN='\033[32m'
 NC='\033[0m' # No Color
 
 # Set DEBIAN_FRONTEND to noninteractive to avoid GUI prompts during installation
@@ -168,3 +169,6 @@ systemctl restart apache2
 # Display instructions for next steps
 echo -e "${YELLOW}You can now access WordPress by visiting http://<your-server-ip>/wordpress in your browser.${NC}"
 echo -e "${YELLOW}Installation complete!${NC}"
+echo "///////////////////////////////////////////////////////////"
+echo -e "${GRENN} Script Created BY @Bangkomar232@gmail.com ${NC}"
+echo "///////////////////////////////////////////////////////////"
