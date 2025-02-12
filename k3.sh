@@ -4,6 +4,9 @@
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Set DEBIAN_FRONTEND to noninteractive to avoid GUI prompts during installation
+export DEBIAN_FRONTEND=noninteractive
+
 # Update and install required packages
 echo -e "${YELLOW}Updating system and installing Apache, PHP, MySQL, phpMyAdmin...${NC}"
 apt update -y
