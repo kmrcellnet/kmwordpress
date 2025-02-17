@@ -52,7 +52,7 @@ echo -e "${YELLOW}Moving WordPress files to the correct directory...${NC}"
 mv wordpress/* .
 
 # Clean up extracted files
-#rm -rf wordpress wordpress.zip
+rm -rf wordpress.zip
 
 # Set more secure permissions for WordPress directory
 echo -e "${YELLOW}Setting secure permissions for WordPress directory...${NC}"
