@@ -49,7 +49,7 @@ unzip wordpress.zip
 
 # Move WordPress files to the correct directory
 echo -e "${YELLOW}Moving WordPress files to the correct directory...${NC}"
-mv wordpress/* .
+#mv wordpress/* .
 
 # Clean up extracted files
 rm -rf wordpress.zip
