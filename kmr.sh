@@ -1,91 +1,118 @@
 #!/bin/bash
 
-# Define color for yellow
-YELLOW='\033[1;33m'
-GREEN='\033[32m'
-NC='\033[0m' # No Color
+set -e
 
-# Set DEBIAN_FRONTEND to noninteractive to avoid GUI prompts during installation
-export DEBIAN_FRONTEND=noninteractive
+echo "=== INSTALL GENIACS + DATABASE ==="
 
-# Update and install required packages
-echo -e "${YELLOW}Updating system and installing Apache, PHP, MySQL, phpMyAdmin...${NC}"
-apt update -y
-apt install -y apache2 php mariadb-server phpmyadmin wget unzip
+# ===============================
+# Update system
+# ===============================
+apt update && apt upgrade -y
+apt install -y curl gnupg unzip git sudo
 
-# Create symbolic link for phpMyAdmin
-echo -e "${YELLOW}Creating symbolic link for phpMyAdmin...${NC}"
-ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+# ===============================
+# Install MongoDB (WAJIB)
+# ===============================
+echo "=== Install MongoDB ==="
+apt install -y mongodb
+systemctl enable mongodb
+systemctl start mongodb
 
-# Restart Apache to apply the changes
-echo -e "${YELLOW}Restarting Apache...${NC}"
-systemctl restart apache2
+# ===============================
+# Install MariaDB (Opsional)
+# ===============================
+echo "=== Install MariaDB ==="
+apt install -y mariadb-server mariadb-client
+systemctl enable mariadb
+systemctl start mariadb
 
-# Navigate to the web directory
-cd /var/www/html/
+# ===============================
+# Setup MariaDB database
+# ===============================
+DB_NAME="geniacs"
+DB_USER="geniacs"
+DB_PASS="geniacs123"
 
-# Download WordPress
-echo -e "${YELLOW}Downloading WordPress...${NC}"
-wget http://172.16.90.2/unduh/wordpress.zip
-
-# Unzip the WordPress package
-echo -e "${YELLOW}Unzipping WordPress...${NC}"
-unzip wordpress.zip
-
-# Set permissions for the WordPress directory
-echo -e "${YELLOW}Setting permissions for WordPress directory...${NC}"
-chmod -R 777 wordpress
-
-# Prompt for MySQL root password
-echo -e "${YELLOW}Enter MySQL root password:${NC}"
-read -s ROOT_PASS
-
-# Prompt for database name, username, and password
-echo -e "${GREEN}Enter WordPress Database Name:${NC} \c"
-read DB_NAME
-
-echo -e "${GREEN}Enter WordPress Database User:${NC} \c"
-read DB_USER
-
-echo -e "${GREEN}Enter WordPress Database Password:${NC} \c"
-read -s DB_PASS
-
-# Log in to MySQL and create the database and user
-echo -e "${YELLOW}Creating MySQL database and user...${NC}"
-mysql -u root -p"$ROOT_PASS" <<MYSQL_SCRIPT
-CREATE DATABASE $DB_NAME;
-CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
+mysql <<EOF
+CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
-MYSQL_SCRIPT
+EOF
 
-# Get the server IP address
-SERVER_IP=$(hostname -I | awk '{print $1}')
+# ===============================
+# Install Node.js LTS
+# ===============================
+echo "=== Install Node.js ==="
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
 
-# Display completion message
-echo -e "${YELLOW}Database and user created successfully. You can now configure WordPress.${NC}"
+# ===============================
+# Install GeniACS
+# ===============================
+echo "=== Install GeniACS ==="
+npm install -g genieacs@latest
 
-# Automatically configure wp-config.php
-echo -e "${YELLOW}Configuring wp-config.php file with database details...${NC}"
+# ===============================
+# Create genieacs user
+# ===============================
+useradd --system --no-create-home --shell /bin/false genieacs || true
 
-WP_CONFIG_PATH="/var/www/html/wordpress/wp-config.php"
+mkdir -p /opt/genieacs
+chown genieacs:genieacs /opt/genieacs
 
-# If wp-config.php doesn't exist, copy the sample file
-if [ ! -f "$WP_CONFIG_PATH" ]; then
-    cp /var/www/html/wordpress/wp-config-sample.php $WP_CONFIG_PATH
-fi
+# ===============================
+# Create config file
+# ===============================
+cat <<EOF >/opt/genieacs/genieacs.env
+GENIEACS_CWMP_INTERFACE=0.0.0.0
+GENIEACS_NBI_INTERFACE=0.0.0.0
+GENIEACS_FS_INTERFACE=0.0.0.0
+GENIEACS_UI_INTERFACE=0.0.0.0
 
-# Update wp-config.php with database info
-sed -i "s/database_name_here/$DB_NAME/" $WP_CONFIG_PATH
-sed -i "s/username_here/$DB_USER/" $WP_CONFIG_PATH
-sed -i "s/password_here/$DB_PASS/" $WP_CONFIG_PATH
-sed -i "s/localhost/$SERVER_IP/" $WP_CONFIG_PATH
+GENIEACS_MONGODB_CONNECTION_URL=mongodb://localhost:27017/genieacs
+EOF
 
-# Display instructions for next steps
-echo -e "${YELLOW}WordPress is now configured. You can access it via the server IP.${NC}"
-echo -e "${GREEN}Installation complete! You can now access phpMyAdmin at http://$SERVER_IP/phpmyadmin.${NC}"
-echo -e "${GREEN}You can also access WordPress at http://$SERVER_IP/wordpress.${NC}"
-echo -e "${GREEN}///////////////////////////////////////////////////////////////////////${NC}"
-echo -e "${GREEN}Script by Bangkomar232@gmail.com.${NC}"
-echo -e "${GREEN}@nkmrx_18${NC}"
-echo -e "${GREEN}//////////////////////////////////////////////////////////////////////${NC}"
+chown genieacs:genieacs /opt/genieacs/genieacs.env
+
+# ===============================
+# Create systemd services
+# ===============================
+for svc in cwmp nbi fs ui; do
+cat <<EOF >/etc/systemd/system/genieacs-$svc.service
+[Unit]
+Description=GenieACS $svc
+After=network.target mongodb.service
+
+[Service]
+User=genieacs
+Group=genieacs
+EnvironmentFile=/opt/genieacs/genieacs.env
+ExecStart=/usr/bin/genieacs-$svc
+Restart=always
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+done
+
+# ===============================
+# Enable services
+# ===============================
+systemctl daemon-reexec
+systemctl daemon-reload
+
+systemctl enable genieacs-cwmp genieacs-nbi genieacs-fs genieacs-ui
+systemctl start genieacs-cwmp genieacs-nbi genieacs-fs genieacs-ui
+
+echo "================================="
+echo " INSTALL SELESAI "
+echo "================================="
+echo "Web UI : http://IP-SERVER:3000"
+echo "Login  : admin / admin"
+echo ""
+echo "MariaDB:"
+echo " DB     : $DB_NAME"
+echo " User   : $DB_USER"
+echo " Pass   : $DB_PASS"
